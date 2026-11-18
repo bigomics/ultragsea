@@ -11,9 +11,12 @@ ultragsea <- function(G, fc, alpha=0, minLE=1, corshrink=3,
                       method=c("cor","ztest","ttest","goat","camera")[1],
                       format=c("simple","as.gsea")[1]) {
 
-  gg <- intersect(names(fc), rownames(G))
-  fc <- fc[gg]
-  G <- G[gg,]
+  # align G to the background given by fc (fixes #1: a background that is
+  # the intersection of fc and rownames(G) can collapse to the gene set
+  # itself, which breaks a single gene set or a nested pair)
+  G <- sparsematrix_match(G, rows=names(fc), cols=NULL)
+
+  ## filter by size
   size <- Matrix::colSums(G!=0)
   if(method == "goat") minsize <- max(minsize,10L)
   sel <- which(size >= minsize & size <= maxsize)
@@ -116,11 +119,11 @@ ultragsea <- function(G, fc, alpha=0, minLE=1, corshrink=3,
 fgsea <- function(pathways, stats, minSize = 1, maxSize = length(stats)-1,
                   nperm=20) {
   G <- gmt2mat(pathways)
-  gg <- intersect(names(stats),rownames(G))
-  G <- G[gg,match(names(pathways),colnames(G))]
-  stats <- stats[gg]
+  G <- G[, match(names(pathways), colnames(G)), drop=FALSE]
+  # align G to the background given by stats (see ultragsea(), #1)
+  G <- sparsematrix_match(G, rows=names(stats), cols=NULL)
   gsize <- Matrix::colSums(G)
-  G <- G[, gsize >= minSize & gsize <= maxSize]
+  G <- G[, gsize >= minSize & gsize <= maxSize, drop=FALSE]
   # run fgseaSimple only for few iterations only for NES
   suppressWarnings(fres <- fgsea::fgseaSimple(pathways, stats, nperm=nperm))
   # use ultragsea for p-value

@@ -39,9 +39,6 @@ gset.cortest <- function(gset, FC, compute.p = FALSE, use.rank = FALSE,
     if (NCOL(FC) == 0) stop("FC has zero columns")
   }
 
-  #  if (!any(class(gset) %in% c("Matrix", "dgCMatrix", "lgCMatrix", "matrix", "array"))) {
-  #    stop("gset must be a matrix")
-  #  }
   if (!inherits(gset, "Matrix")) stop("gset must be a matrix")
 
   is.vec <- (NCOL(FC) == 1 && !inherits(FC, c("matrix", "Matrix")))
@@ -52,18 +49,16 @@ gset.cortest <- function(gset, FC, compute.p = FALSE, use.rank = FALSE,
   n2 <- sum(rownames(FC) %in% rownames(gset), na.rm = TRUE)
   if (n1 > n2) gset <- Matrix::t(gset)
 
-  # align matrices
-  gg <- intersect(rownames(gset), rownames(FC))
-  FC1 <- FC[gg, , drop = FALSE]
-  gset <- gset[gg, , drop = FALSE]
+  # align gset to the background given by FC (see ultragsea(), #1)
+  gset <- sparsematrix_match(gset, rows=rownames(FC), cols=NULL)
+
 
   if (use.rank) {
-    if (inherits(FC1, "dgCMatrix")) {
+    if (inherits(FC, "dgCMatrix")) {
       ## for sparse dgCMatrix
-      ## FC1 <- apply(FC1, 2, base::rank, na.last = "keep", ties.method="random")
-      FC1 <- sparseMatrixStats::colRanks(FC1, na.last = "keep", ties.method = "random", preserveShape = TRUE)
+      FC <- sparseMatrixStats::colRanks(FC, na.last = "keep", ties.method = "random", preserveShape = TRUE)
     } else {
-      FC1 <- matrixStats::colRanks(FC1, na.last = "keep", ties.method = "random", preserveShape = TRUE)
+      FC <- matrixStats::colRanks(FC, na.last = "keep", ties.method = "random", preserveShape = TRUE)
     }
   }
 
@@ -71,10 +66,10 @@ gset.cortest <- function(gset, FC, compute.p = FALSE, use.rank = FALSE,
   ## whole matrix. (2) in case the FC matrix has missing values, we
   ## must proceed 1-column at time and do reduced corSparse on
   ## intersection of genes.
-  rho1 <- cor_sparse_matrix(gset, FC1)
+  rho1 <- cor_sparse_matrix(gset, FC)
 
   rownames(rho1) <- colnames(gset)
-  colnames(rho1) <- colnames(FC1)
+  colnames(rho1) <- colnames(FC)
   rho1[is.nan(rho1)] <- NA ## ??
 
   if(corshrink > 0) {
@@ -85,9 +80,12 @@ gset.cortest <- function(gset, FC, compute.p = FALSE, use.rank = FALSE,
   
   ## compute p-value
   if (compute.p) {
-    pv <- apply(rho1, 2, function(x) cor_pvalue(x, n = nrow(FC1)))
+    pv <- apply(rho1, 2, function(x) cor_pvalue(x, n = nrow(FC)))
     pv[is.nan(pv)] <- NA ## ??
+    pv <- matrix(pv, nrow = nrow(rho1), ncol = ncol(rho1),
+      dimnames = dimnames(rho1))   ## keep dims for single set
     qv <- apply(pv, 2, stats::p.adjust, method = "fdr")
+    qv <- matrix(qv, nrow = nrow(pv), ncol = ncol(pv), dimnames = dimnames(pv))
     df <- list(rho = rho1, p.value = pv, q.value = qv)
   } else {
     df <- list(rho = rho1, p.value = NA, q.value = NA)

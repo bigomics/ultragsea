@@ -44,6 +44,8 @@ makeGseaResult <- function(res, geneList, geneSets)
 #' rows and cols (as names).
 #' 
 sparsematrix_match <- function(mat, rows, cols=NULL) {
+  if (anyDuplicated(rows)) stop("sparsematrix_match: rows must be unique gene names")
+  if (!is.null(cols) && anyDuplicated(cols)) stop("sparsematrix_match: cols must be unique names")
   xrows <- setdiff(rows, rownames(mat))
   if(length(xrows)) {
     mat <- rbind(mat, Matrix::Matrix(0, nrow = length(xrows), ncol = ncol(mat),

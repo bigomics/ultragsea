@@ -66,3 +66,25 @@ test_that("gset.cortest aligns gset rows to FC order even without padding", {
 
   expect_equal(as.numeric(res$rho[, 1]), stats::cor(c(1, 0, 1, 0, 1), c(5, 4, 3, 2, 1)))
 })
+
+test_that("fgsea() works with a single small pathway (same background fix as ultragsea)", {
+  n_genes <- 1e3L
+  set.seed(0L)
+  stats_fc <- stats::rnorm(n_genes)
+  genes <- paste0("gene", seq_len(n_genes))
+  names(stats_fc) <- genes
+
+  res <- fgsea(list(set1 = genes[seq_len(10L)]), stats_fc)
+
+  expect_equal(nrow(res), 1)
+  expect_false(is.na(res$pval))
+})
+
+test_that("sparsematrix_match rejects duplicate gene names instead of silently corrupting results", {
+  fc <- stats::setNames(stats::rnorm(20), paste0("g", 1:20))
+  names(fc)[20] <- "g1" # duplicate
+
+  G <- gmt2mat(list(set1 = paste0("g", 1:5)))
+
+  expect_error(ultragsea(G, fc), "unique")
+})

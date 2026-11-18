@@ -112,11 +112,11 @@ ultragsea <- function(G, fc, alpha=0, minLE=1, corshrink=3,
 fgsea <- function(pathways, stats, minSize = 1, maxSize = length(stats)-1,
                   nperm=20, gseaParam=1) {
   G <- gmt2mat(pathways)
-  gg <- intersect(names(stats),rownames(G))
-  G <- G[gg,match(names(pathways),colnames(G))]
-  stats <- stats[gg]
+  G <- G[, match(names(pathways), colnames(G)), drop=FALSE]
+  # align G to the background given by stats (see ultragsea(), #1)
+  G <- sparsematrix_match(G, rows=names(stats), cols=NULL)
   gsize <- Matrix::colSums(G)
-  G <- G[, gsize >= minSize & gsize <= maxSize]
+  G <- G[, gsize >= minSize & gsize <= maxSize, drop=FALSE]
   # run fgseaSimple only for few iterations only for NES
   suppressWarnings(fres <- fgsea::fgseaSimple(pathways, stats,
     gseaParam=gseaParam, nperm=nperm))

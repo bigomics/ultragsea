@@ -37,3 +37,25 @@ makeGseaResult <- function(res, geneList, geneSets)
   new("gseaResult", result = df, geneSets = geneSets, geneList = geneList, 
     params = params, readable = FALSE)
 }
+
+
+
+#' Efficiently match a sparsematrix mat to new dimensions matching new
+#' rows and cols (as names).
+#' 
+sparsematrix_match <- function(mat, rows, cols=NULL) {
+  xrows <- setdiff(rows, rownames(mat))
+  if(length(xrows)) {
+    mat <- rbind(mat, Matrix::Matrix(0, nrow = length(xrows), ncol = ncol(mat),
+      sparse = TRUE, dimnames = list(xrows, colnames(mat))))
+  }
+  mat <- mat[rows, , drop=FALSE]  ## always reindex, even if nothing was missing
+
+  if(is.null(cols)) cols <- colnames(mat)
+  xcols <- setdiff(cols, colnames(mat))
+  if(length(xcols)) {
+    mat <- cbind(mat, Matrix::Matrix(0, nrow = nrow(mat), ncol = length(xcols),
+      sparse = TRUE, dimnames = list(rownames(mat), xcols)))
+  }
+  mat[, cols, drop=FALSE]  ## always reindex
+}

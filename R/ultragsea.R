@@ -8,12 +8,15 @@
 #' @export
 ultragsea <- function(G, fc, alpha=0, minLE=1, corshrink=3,
                       minsize = 1L, maxsize = 9999L, center=TRUE,
-                      method=c("cor","ztest","ttest","goat","camera")[1],
+                      method=c("cor","ztest","ttest","goat")[1],
                       format=c("simple","as.gsea")[1]) {
 
-  gg <- intersect(names(fc), rownames(G))
-  fc <- fc[gg]
-  G <- G[gg,]
+  # align G to the background given by fc (fixes #1: a background that is
+  # the intersection of fc and rownames(G) can collapse to the gene set
+  # itself, which breaks a single gene set or a nested pair)
+  G <- sparsematrix_match(G, rows=names(fc), cols=NULL)
+
+  ## filter by size
   size <- Matrix::colSums(G!=0)
   if(method == "goat") minsize <- max(minsize,10L)
   sel <- which(size >= minsize & size <= maxsize)
@@ -21,7 +24,7 @@ ultragsea <- function(G, fc, alpha=0, minLE=1, corshrink=3,
   size <- size[sel]
 
   gmt <- NULL
-  if(method %in% c("goat","camera") && is.null(gmt)) {
+  if(method %in% c("goat") && is.null(gmt)) {
     gmt <- mat2gmt(G)
   }
   
@@ -50,13 +53,6 @@ ultragsea <- function(G, fc, alpha=0, minLE=1, corshrink=3,
     p_value <- res$pval
     q_value <- res$padj
     stat_value <- res$score
-  } else if(method=="camera") {
-    if(!require("limma")) stop("please install limma")
-    res <- limma::cameraPR(fc, gmt)
-    res <- res[match(colnames(G),rownames(res)),]
-    p_value <- res$PValue
-    q_value <- res$FDR
-    stat_value <- -log10(res$PValue)*(1 - 2*(res$Direction=="Down"))
   } else {
     stop("unsupported method: ", method)
   }
@@ -114,7 +110,7 @@ ultragsea <- function(G, fc, alpha=0, minLE=1, corshrink=3,
 #' 
 #' @export
 fgsea <- function(pathways, stats, minSize = 1, maxSize = length(stats)-1,
-                  nperm=20) {
+                  nperm=20, gseaParam=1) {
   G <- gmt2mat(pathways)
   gg <- intersect(names(stats),rownames(G))
   G <- G[gg,match(names(pathways),colnames(G))]
@@ -122,7 +118,8 @@ fgsea <- function(pathways, stats, minSize = 1, maxSize = length(stats)-1,
   gsize <- Matrix::colSums(G)
   G <- G[, gsize >= minSize & gsize <= maxSize]
   # run fgseaSimple only for few iterations only for NES
-  suppressWarnings(fres <- fgsea::fgseaSimple(pathways, stats, nperm=nperm))
+  suppressWarnings(fres <- fgsea::fgseaSimple(pathways, stats,
+    gseaParam=gseaParam, nperm=nperm))
   # use ultragsea for p-value
   res <- ultragsea(G, stats, method="cor", alpha=0, format="simple")
   res <- res[match(res$pathway,fres$pathway),]  

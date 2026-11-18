@@ -12,14 +12,14 @@
 Source:
 [`DESCRIPTION`](https://github.com/bigomics/ultragsea/blob/master/DESCRIPTION)
 
-Kwee I (2025). *ultragsea: Ultrafast preranked gene set enrichment
+Kwee I (2026). *ultragsea: Ultrafast preranked gene set enrichment
 analysis*. R package version 0.1.12,
 <https://github.com/bigomics/ultragsea>.
 
     @Manual{,
       title = {ultragsea: Ultrafast preranked gene set enrichment analysis},
       author = {Ivo Kwee},
-      year = {2025},
+      year = {2026},
       note = {R package version 0.1.12},
       url = {https://github.com/bigomics/ultragsea},
     }

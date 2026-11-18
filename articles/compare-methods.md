@@ -31,6 +31,7 @@ sets with less than 10 genes, partly because GOAT cannot handle these.
 After filtering, we retain 761 gene sets.
 
 ``` r
+
 library(fgsea)
 library(goat)
 #> Loading required package: dplyr
@@ -69,6 +70,7 @@ Run the code below if you want to increase the number of gene sets for
 testing.
 
 ``` r
+
 if(0) {
   ## run this to increase the number of gene sets.
   gmt <- rep(gmt,40)
@@ -84,6 +86,7 @@ For benchmarking, we use peakRAM to measure runtime and memory usage of
 each method.
 
 ``` r
+
 library(peakRAM)
 gs <- names(gmt)
 tt <- peakRAM::peakRAM(
@@ -101,15 +104,16 @@ kableExtra::kable(tt)
 
 | Function_Call | Elapsed_Time_sec | Total_RAM_Used_MiB | Peak_RAM_Used_MiB |
 |:--------------|-----------------:|-------------------:|------------------:|
-| fgsea         |            4.335 |                1.3 |              43.8 |
-| cameraPR      |            0.317 |                0.8 |              42.4 |
-| ultragsea.z   |            0.026 |                0.1 |               5.8 |
-| ultragsea.c   |            0.037 |                0.9 |               9.5 |
-| cortest       |            0.004 |                0.1 |               2.8 |
-| ztest         |            0.005 |                0.0 |               2.8 |
-| goat          |            0.244 |                4.4 |              23.7 |
+| fgsea         |            4.024 |                1.3 |              42.6 |
+| cameraPR      |            0.205 |                0.8 |              41.2 |
+| ultragsea.z   |            0.024 |                0.2 |               9.2 |
+| ultragsea.c   |            0.028 |                0.9 |              12.7 |
+| cortest       |            0.005 |                0.0 |               4.2 |
+| ztest         |            0.003 |                0.0 |               2.8 |
+| goat          |            0.106 |                4.5 |              23.8 |
 
 ``` r
+
 rt <- tt[,2]
 names(rt) <- tt[,1]
 par(mar=c(5,8,2,2))
@@ -127,6 +131,7 @@ value, so for the score we computed `-log(p)*sign` as its score. Before
 plotting we need to make sure all results tables are aligned.
 
 ``` r
+
 res.fgsea <- res.fgsea[match(gs,res.fgsea$pathway),]
 res.goat <- res.goat[match(gs,res.goat$pathway),]
 res.cameraPR$score <- -log(res.cameraPR$PValue)*(-1+2*(res.cameraPR$Direction=="Up"))
@@ -148,6 +153,7 @@ cameraPR shows some curve compared to the others. We can compare them
 better by comparing the ranks of the scores:
 
 ``` r
+
 pairs(apply(Z,2,rank), pch='.',cex=4)
 ```
 
@@ -159,6 +165,7 @@ Next, we can compare the p-values between the methods. Also here, we see
 that all p-values are highly correlated to each other.
 
 ``` r
+
 P <- cbind(
   fgsea = res.fgsea$pval,
   cameraPR = res.cameraPR$PValue,
@@ -183,10 +190,11 @@ function for ultragsea::fgsea() that is 8-10x faster that the original
 fgsea::fgsea()
 
 ``` r
+
 system.time(res1 <- fgsea::fgsea(gmt, fc))
 #>    user  system elapsed 
-#>   5.573   0.093   3.616
+#>   2.789   0.105   3.246
 system.time(res2 <- ultragsea::fgsea(gmt, fc))
 #>    user  system elapsed 
-#>   0.233   0.108   0.273
+#>   0.195   0.155   0.259
 ```

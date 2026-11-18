@@ -18,6 +18,7 @@ typically is 100x faster than fGSEA.
 You can install ultragsea from from GitHub:
 
 ``` r
+
 remotes::install_github("bigomics/ultragsea")
 ```
 

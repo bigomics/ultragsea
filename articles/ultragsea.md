@@ -16,9 +16,11 @@ For this vignette, we retrieve the Hallmark gene sets using the
 from somewhere else.
 
 ``` r
+
 library(ultragsea)
 library(msigdbr)
 gs <- msigdbr::msigdbr(collection = "H")
+#> Downloading gene sets (first use only, may take a few minutes)...
 gmt <- tapply(gs$gene_symbol,gs$gs_name,list)
 length(gmt)
 #> [1] 50
@@ -31,28 +33,29 @@ this is a fold change from some statistical comparison of your
 experiment.
 
 ``` r
+
 G <- gmt2mat(gmt)
 fc <- rnorm(nrow(G))
 names(fc) <- rownames(G)
 res <- ultragsea(G, fc, format='as.gsea', method='cor')
 res <- ultragsea(G, fc, format='as.gsea', method='ztest')
 head(res)
-#>                               pathway      pval      padj log2err          ES
-#>                                <char>     <num>     <num>   <num>       <num>
-#> 1:           HALLMARK_APICAL_JUNCTION 0.8346855 0.9696221      NA  0.08236827
-#> 2:           HALLMARK_HEME_METABOLISM 0.8726599 0.9696221      NA  0.06325971
-#> 3:     HALLMARK_INFLAMMATORY_RESPONSE 0.7118918 0.9696221      NA  0.14576208
-#> 4:         HALLMARK_KRAS_SIGNALING_UP 0.9757536 0.9757536      NA -0.01199556
-#> 5: HALLMARK_OXIDATIVE_PHOSPHORYLATION 0.8677728 0.9696221      NA -0.06570964
-#> 6:              HALLMARK_ADIPOGENESIS 0.2364614 0.7389418      NA  0.46725361
-#>            NES  size                                 leadingEdge
-#>          <num> <int>                                      <list>
-#> 1:  0.19461526   200 CRAT,HRAS,INSIG1,PIK3R3,ACTN2,ADAM9,...[32]
-#> 2:  0.14946660   200    CA2,BNIP3L,CDC27,H1-0,BCAM,BLVRA,...[33]
-#> 3:  0.34439870   200    IL4R,CCL2,HBEGF,INHBA,ITGB3,EREG,...[37]
-#> 4: -0.02834246   200        BMP2,CCND2,LIF,CFB,CSF2,PLAT,...[33]
-#> 5: -0.15525515   200 ACAA1,SDHC,ECHS1,GPI,GRPEL1,ATP6V1F,...[27]
-#> 6:  1.10400136   200  ALDOA,ECH1,GPX4,CRAT,DHCR7,GADD45A,...[40]
+#>                               pathway       pval      padj log2err          ES
+#>                                <char>      <num>     <num>   <num>       <num>
+#> 1:           HALLMARK_HEME_METABOLISM 0.96527162 0.9652716      NA  0.01423022
+#> 2:     HALLMARK_INFLAMMATORY_RESPONSE 0.68056175 0.8725151      NA  0.13455730
+#> 3:         HALLMARK_KRAS_SIGNALING_UP 0.63095925 0.8725151      NA  0.15700453
+#> 4: HALLMARK_OXIDATIVE_PHOSPHORYLATION 0.67483574 0.8725151      NA -0.13711441
+#> 5:              HALLMARK_ADIPOGENESIS 0.13486035 0.6686212      NA  0.48868756
+#> 6:       HALLMARK_ALLOGRAFT_REJECTION 0.07052317 0.6686212      NA -0.59109455
+#>           NES  size                                 leadingEdge
+#>         <num> <int>                                      <list>
+#> 1:  0.0384407   200    CA2,BNIP3L,CDC27,H1-0,BCAM,BLVRA,...[33]
+#> 2:  0.3634855   200    IL4R,CCL2,HBEGF,INHBA,ITGB3,EREG,...[36]
+#> 3:  0.4241232   200      CA2,HBEGF,INHBA,KLF4,EREG,AKT2,...[36]
+#> 4: -0.3703931   200 ACAA1,SDHC,ECHS1,GPI,GRPEL1,ATP6V1F,...[27]
+#> 5:  1.3201130   200  ALDOA,ECH1,GPX4,CRAT,DHCR7,GADD45A,...[41]
+#> 6: -1.5967495   200    CCND2,TIMP1,LIF,IFNGR2,CCL7,LCP2,...[41]
 ```
 
 For the fastest speed, especially when computing enrichment for multiple
@@ -63,6 +66,7 @@ formatted output tables as
 but they are much faster as they are optimized for matrix inputs `F`.
 
 ``` r
+
 F <- cbind(fc,fc,fc,fc,fc)
 res1 <- gset.cortest(G, F, compute.p=TRUE)
 res2 <- gset.ztest(G, F)
@@ -74,6 +78,7 @@ You can proceed by plotting the gene set using e.g. the plotting
 functions of the fgsea package.
 
 ``` r
+
 #library(fgsea)
 #k <- res$pathway[which.min(res$pval)]
 #fgsea::plotEnrichment(gmt[[k]],fc,ticksSize = 0.2)
@@ -82,14 +87,15 @@ functions of the fgsea package.
 ## Session info
 
 ``` r
+
 sessionInfo()
-#> R version 4.5.2 (2025-10-31)
+#> R version 4.6.2 (2026-10-29)
 #> Platform: x86_64-pc-linux-gnu
-#> Running under: Ubuntu 24.04.3 LTS
+#> Running under: Ubuntu 26.04.1 LTS
 #> 
 #> Matrix products: default
 #> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
-#> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
+#> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.32.so;  LAPACK version 3.12.0
 #> 
 #> locale:
 #>  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
@@ -104,24 +110,24 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] msigdbr_25.1.1   ultragsea_0.1.12 BiocStyle_2.38.0
+#> [1] msigdbr_26.1.1   ultragsea_0.1.12 BiocStyle_2.40.0
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] Matrix_1.7-4        babelgene_22.9      jsonlite_2.0.0     
-#>  [4] dplyr_1.1.4         compiler_4.5.2      BiocManager_1.30.27
-#>  [7] tidyselect_1.2.1    slam_0.1-55         parallel_4.5.2     
-#> [10] assertthat_0.2.1    jquerylib_0.1.4     systemfonts_1.3.1  
-#> [13] textshaping_1.0.4   yaml_2.3.12         fastmap_1.2.0      
-#> [16] lattice_0.22-7      R6_2.6.1            generics_0.1.4     
-#> [19] qlcMatrix_0.9.9     curl_7.0.0          knitr_1.51         
-#> [22] tibble_3.3.0        bookdown_0.46       desc_1.4.3         
-#> [25] bslib_0.9.0         pillar_1.11.1       rlang_1.1.6        
-#> [28] cachem_1.1.0        xfun_0.55           fs_1.6.6           
-#> [31] sass_0.4.10         otel_0.2.0          cli_3.6.5          
-#> [34] pkgdown_2.2.0       withr_3.0.2         magrittr_2.0.4     
-#> [37] grid_4.5.2          digest_0.6.39       docopt_0.7.2       
-#> [40] lifecycle_1.0.4     vctrs_0.6.5         sparsesvd_0.2-3    
-#> [43] data.table_1.18.0   evaluate_1.0.5      glue_1.8.0         
-#> [46] ragg_1.5.0          rmarkdown_2.30      matrixStats_1.5.0  
-#> [49] tools_4.5.2         pkgconfig_2.0.3     htmltools_0.5.9
+#>  [1] Matrix_1.7-6        jsonlite_2.0.0      dplyr_1.2.1        
+#>  [4] compiler_4.6.2      BiocManager_1.30.27 tidyselect_1.2.1   
+#>  [7] slam_0.1-56         parallel_4.6.2      assertthat_0.2.1   
+#> [10] jquerylib_0.1.4     systemfonts_1.3.3   textshaping_1.0.5  
+#> [13] yaml_2.3.12         fastmap_1.2.0       lattice_0.23-1     
+#> [16] R6_2.6.1            generics_0.1.4      qlcMatrix_0.9.9    
+#> [19] curl_8.1.0          knitr_1.52          tibble_3.3.1       
+#> [22] bookdown_0.48       desc_1.4.3          bslib_0.12.0       
+#> [25] pillar_1.11.1       rlang_1.3.0         cachem_1.1.0       
+#> [28] xfun_0.62           fs_2.1.0            sass_0.4.10        
+#> [31] otel_0.3.0          cli_3.6.6           pkgdown_2.2.1      
+#> [34] withr_3.0.3         magrittr_2.0.5      digest_0.6.39      
+#> [37] grid_4.6.2          docopt_0.7.2        lifecycle_1.0.5    
+#> [40] vctrs_0.7.3         sparsesvd_0.2-3     data.table_1.18.6.1
+#> [43] evaluate_1.0.5      glue_1.8.1          ragg_1.5.2         
+#> [46] rmarkdown_2.32      matrixStats_1.5.0   tools_4.6.2        
+#> [49] pkgconfig_2.0.3     htmltools_0.5.9
 ```

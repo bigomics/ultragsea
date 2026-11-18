@@ -8,7 +8,7 @@
 #' @export
 ultragsea <- function(G, fc, alpha=0, minLE=1, corshrink=3,
                       minsize = 1L, maxsize = 9999L, center=TRUE,
-                      method=c("cor","ztest","ttest","goat")[1],
+                      method=c("cor","ztest","ttest","goat","camera")[1],
                       format=c("simple","as.gsea")[1]) {
 
   # align G to the background given by fc (fixes #1: a background that is
@@ -24,7 +24,7 @@ ultragsea <- function(G, fc, alpha=0, minLE=1, corshrink=3,
   size <- size[sel]
 
   gmt <- NULL
-  if(method %in% c("goat") && is.null(gmt)) {
+  if(method %in% c("goat","camera") && is.null(gmt)) {
     gmt <- mat2gmt(G)
   }
   
@@ -53,6 +53,13 @@ ultragsea <- function(G, fc, alpha=0, minLE=1, corshrink=3,
     p_value <- res$pval
     q_value <- res$padj
     stat_value <- res$score
+  } else if(method=="camera") {
+    if(!require("limma")) stop("please install limma")
+    res <- limma::cameraPR(fc, gmt)
+    res <- res[match(colnames(G),rownames(res)),]
+    p_value <- res$PValue
+    q_value <- res$FDR
+    stat_value <- -log10(res$PValue)*(1 - 2*(res$Direction=="Down"))
   } else {
     stop("unsupported method: ", method)
   }
@@ -110,7 +117,7 @@ ultragsea <- function(G, fc, alpha=0, minLE=1, corshrink=3,
 #' 
 #' @export
 fgsea <- function(pathways, stats, minSize = 1, maxSize = length(stats)-1,
-                  nperm=20, gseaParam=1) {
+                  nperm=20) {
   G <- gmt2mat(pathways)
   G <- G[, match(names(pathways), colnames(G)), drop=FALSE]
   # align G to the background given by stats (see ultragsea(), #1)
@@ -118,8 +125,7 @@ fgsea <- function(pathways, stats, minSize = 1, maxSize = length(stats)-1,
   gsize <- Matrix::colSums(G)
   G <- G[, gsize >= minSize & gsize <= maxSize, drop=FALSE]
   # run fgseaSimple only for few iterations only for NES
-  suppressWarnings(fres <- fgsea::fgseaSimple(pathways, stats,
-    gseaParam=gseaParam, nperm=nperm))
+  suppressWarnings(fres <- fgsea::fgseaSimple(pathways, stats, nperm=nperm))
   # use ultragsea for p-value
   res <- ultragsea(G, stats, method="cor", alpha=0, format="simple")
   res <- res[match(res$pathway,fres$pathway),]  

@@ -10,7 +10,7 @@ test_that("gset.cortest basic functionality with vector input", {
   colnames(gset) <- paste0("gs", 1:5)
   gset <- Matrix::Matrix(gset, sparse = TRUE)
 
-  result <- gset.cortest(FC, gset)
+  result <- gset.cortest(gset, FC)
 
   expect_type(result, "list")
   expect_named(result, c("rho", "p.value", "q.value"))
@@ -29,7 +29,7 @@ test_that("gset.cortest with matrix input", {
   colnames(gset) <- paste0("gs", 1:5)
   gset <- Matrix::Matrix(gset, sparse = TRUE)
 
-  result <- gset.cortest(FC, gset)
+  result <- gset.cortest(gset, FC)
 
   expect_type(result, "list")
   expect_equal(nrow(result$rho), 5)
@@ -46,7 +46,7 @@ test_that("gset.cortest with compute.p=TRUE", {
   colnames(gset) <- paste0("gs", 1:4)
   gset <- Matrix::Matrix(gset, sparse = TRUE)
 
-  result <- gset.cortest(FC, gset, compute.p = TRUE)
+  result <- gset.cortest(gset, FC, compute.p = TRUE)
 
   expect_true(is.matrix(result$p.value))
   expect_true(is.matrix(result$q.value))
@@ -64,7 +64,7 @@ test_that("gset.cortest with compute.p=FALSE", {
   colnames(gset) <- paste0("gs", 1:3)
   gset <- Matrix::Matrix(gset, sparse = TRUE)
 
-  result <- gset.cortest(FC, gset, compute.p = FALSE)
+  result <- gset.cortest(gset, FC, compute.p = FALSE)
 
   expect_true(is.matrix(result$rho))
   expect_equal(result$p.value, NA)
@@ -81,8 +81,8 @@ test_that("gset.cortest with use.rank=TRUE", {
   colnames(gset) <- paste0("gs", 1:5)
   gset <- Matrix::Matrix(gset, sparse = TRUE)
 
-  result_cor <- gset.cortest(FC, gset, use.rank = FALSE)
-  result_rankcor <- gset.cortest(FC, gset, use.rank = TRUE)
+  result_cor <- gset.cortest(gset, FC, use.rank = FALSE)
+  result_rankcor <- gset.cortest(gset, FC, use.rank = TRUE)
 
   # Results should be different
   expect_false(isTRUE(all.equal(result_cor$rho, result_rankcor$rho)))
@@ -98,7 +98,7 @@ test_that("gset.cortest with transposed gene set", {
   rownames(gset) <- paste0("gs", 1:5)
   gset <- Matrix::Matrix(gset, sparse = TRUE)
 
-  result <- gset.cortest(FC, gset)
+  result <- gset.cortest(gset, FC)
 
   # Should auto-transpose to correct orientation
   expect_equal(nrow(result$rho), 5)
@@ -114,7 +114,7 @@ test_that("gset.cortest returns valid correlations", {
   colnames(gset) <- paste0("gs", 1:4)
   gset <- Matrix::Matrix(gset, sparse = TRUE)
 
-  result <- gset.cortest(FC, gset)
+  result <- gset.cortest(gset, FC)
 
   # Correlations should be between -1 and 1 (or NA)
   expect_true(all(result$rho >= -1 & result$rho <= 1, na.rm = TRUE))
@@ -127,7 +127,7 @@ test_that("gset.cortest throws error for missing names", {
   colnames(gset) <- paste0("gs", 1:3)
   gset <- Matrix::Matrix(gset, sparse = TRUE)
 
-  expect_error(gset.cortest(FC, gset), "must be named")
+  expect_error(gset.cortest(gset, FC), "must be named")
 })
 
 test_that("gset.cortest throws error for zero columns", {
@@ -139,7 +139,7 @@ test_that("gset.cortest throws error for zero columns", {
   rownames(gset) <- names(FC)
   gset <- Matrix::Matrix(gset, sparse = TRUE)
 
-  expect_error(gset.cortest(FC, gset), "zero columns")
+  expect_error(gset.cortest(gset, FC), "zero columns")
 })
 
 test_that("gset.cortest with gene intersection", {
@@ -152,7 +152,7 @@ test_that("gset.cortest with gene intersection", {
   colnames(gset) <- paste0("gs", 1:5)
   gset <- Matrix::Matrix(gset, sparse = TRUE)
 
-  result <- gset.cortest(FC, gset)
+  result <- gset.cortest(gset, FC)
 
   expect_equal(nrow(result$rho), 5)
 })
@@ -196,7 +196,7 @@ test_that("gset.cortest FDR adjustment", {
   colnames(gset) <- paste0("gs", 1:10)
   gset <- Matrix::Matrix(gset, sparse = TRUE)
 
-  result <- gset.cortest(FC, gset, compute.p = TRUE)
+  result <- gset.cortest(gset, FC, compute.p = TRUE)
 
   # FDR adjustment should produce q-values >= p-values
   expect_true(all(result$q.value >= result$p.value - 1e-10, na.rm = TRUE))
